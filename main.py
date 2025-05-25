@@ -12,6 +12,7 @@ config = check_config()
 path_location = os.path.dirname(__file__)
 
 intents = discord.Intents.default()
+intents.message_content = True
 client = commands.Bot(command_prefix=config[1], intents=intents)
 
 games = [
