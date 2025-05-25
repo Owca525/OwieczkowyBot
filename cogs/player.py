@@ -38,7 +38,7 @@ class MusicPlayer:
                 self.title = info["title"]
                 self.play(info["url"])
         except Exception as e:
-            logger.error(f"Error: {e.with_traceback()}")
+            logger.error(f"Error: {e}", exc_info=True)
             self.voice_client.disconnect()
     
     def detectError(self, error):
@@ -53,7 +53,7 @@ class MusicPlayer:
                 return
             self.voice_client.disconnect()
         except Exception as e:
-            logger.error(f"Error: {e.with_traceback()}")
+            logger.error(f"Error: {e}", exc_info=True)
             self.voice_client.disconnect()
 
     def play(self, url: str):
@@ -61,7 +61,7 @@ class MusicPlayer:
             source = discord.FFmpegPCMAudio(url, **FFMPEG_OPTIONS)
             self.voice_client.play(source, after=self.detectError)
         except Exception as e:
-            logger.error(f"Error: {e.with_traceback()}")
+            logger.error(f"Error: {e}", exc_info=True)
             self.voice_client.disconnect()
 
 class player(commands.Cog):
@@ -149,7 +149,7 @@ class player(commands.Cog):
                 )
                 await interaction.followup.send(embed=embed)
         except Exception as e:
-            logger.error(f"Error: {e.with_traceback()}")
+            logger.error(f"Error: {e}", exc_info=True)
             await interaction.followup.send("Sorry, i have some problem")
 
     @discord.app_commands.command(name="pause", description="Pause Music")
@@ -180,7 +180,7 @@ class player(commands.Cog):
             else:
                 await interaction.response.send_message("I'm not in the voice chat", ephemeral=True)
         except Exception as e:
-            logger.error(f"Error: {e.with_traceback()}")
+            logger.error(f"Error: {e}", exc_info=True)
             await interaction.followup.send("Sorry, i have some problem")
 
     @discord.app_commands.command(name="skip", description="Skip music")
@@ -201,7 +201,7 @@ class player(commands.Cog):
             else:
                 await interaction.followup.send(":x: I can't skip music :x:")
         except Exception as e:
-            logger.error(f"Error: {e.with_traceback()}")
+            logger.error(f"Error: {e}", exc_info=True)
             await interaction.followup.send("Sorry, i have some problem")
 
     @discord.app_commands.command(name="list", description="List music playlist")
@@ -218,7 +218,7 @@ class player(commands.Cog):
             else:
                 await interaction.followup.send(":x: I'm not actual playing :x:")
         except Exception as e:
-            logger.error(f"Error: {e.with_traceback()}")
+            logger.error(f"Error: {e}", exc_info=True)
             await interaction.followup.send("Sorry, i have some problem")
 
 async def setup(bot):

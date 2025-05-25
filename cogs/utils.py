@@ -12,7 +12,7 @@ class utilscog(commands.Cog):
         try:
             await interaction.followup.send(f"Overworld: z: {z / 8}, x: {x / 8}\nNether: z: {z * 8}, x: {x * 8}")
         except Exception as e:
-            logger.error(f"Error: {e.with_traceback()}")
+            logger.error(f"Error: {e}", exc_info=True)
             await interaction.followup.send("Sorry, i have some problem")  
     
     @discord.app_commands.command(name="avatar", description="Show user avatar")
@@ -29,7 +29,7 @@ class utilscog(commands.Cog):
             embed.set_image(url=user.avatar.url)
             await interaction.followup.send(embed=embed)
         except Exception as e:
-            logger.error(f"Error: {e.with_traceback()}")
+            logger.error(f"Error: {e}", exc_info=True)
             await interaction.followup.send("Sorry, i have some problem")
 
     # TODO: Someday fixing this
