@@ -177,6 +177,22 @@ class player(commands.Cog):
             logger.error(f"Error: {e}")
             await interaction.followup.send("Sorry, i have some problem")
 
+    @discord.app_commands.command(name="stop", description="Stop Music")
+    async def stop(self, interaction: discord.Interaction):
+        await interaction.response.defer(thinking=True)
+        try:
+            if interaction.guild.voice_client:
+                if interaction.guild.voice_client.is_paused() != True:
+                    interaction.guild.voice_client.pause()
+                
+                self.removeFromCache(interaction.guild_id)
+                await interaction.followup.send("I Stopped the music :stop_button:")
+            else:
+                await interaction.followup.send("No music is playing.", ephemeral=True)
+        except Exception as e:
+            logger.error(f"Error: {e}")
+            await interaction.followup.send("Sorry, i have some problem")
+
     @discord.app_commands.command(name="leave", description="Leave the voice chat")
     async def leave(self, interaction: discord.Interaction):
         await interaction.response.defer(thinking=True)
@@ -184,11 +200,13 @@ class player(commands.Cog):
             voice_client = interaction.guild.voice_client
             if voice_client and voice_client.is_connected():
                 await voice_client.disconnect()
+                self.removeFromCache(interaction.guild_id)
                 await interaction.followup.send("I'm Leaving.")
             else:
                 await interaction.followup.send("I'm not in the voice chat", ephemeral=True)
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
+            self.removeFromCache(interaction.guild_id)
             await interaction.followup.send("Sorry, i have some problem")
 
     @discord.app_commands.command(name="skip", description="Skip music")
