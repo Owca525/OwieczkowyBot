@@ -27,6 +27,7 @@ games = [
     "The Binding of isaac: Repentance",
     "Project Zomboid",
     "My summer car",
+    "Minecraft",
     f"My prefix {client.command_prefix}"
 ]
 
