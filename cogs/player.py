@@ -25,11 +25,13 @@ FFMPEG_OPTIONS = {
 }
 
 class MusicPlayer:
-    def __init__(self, url: str, voice_client, interaction: discord.Interaction):
+    def __init__(self, url: str, voice_client, interaction: discord.Interaction, resetFunc, server_id):
         self.title: str
         self.playlist = [url]
         self.voice_client: discord.VoiceClient | discord.VoiceProtocol = voice_client
         self.interaction: discord.Interaction = interaction
+        self.resetFunc = resetFunc
+        self.server_id = server_id
 
     def extractMusic(self):
         try:
@@ -52,9 +54,11 @@ class MusicPlayer:
                 self.extractMusic()
                 return
             self.voice_client.disconnect()
+            self.resetFunc(self.server_id)
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
             self.voice_client.disconnect()
+            self.resetFunc(self.server_id)
 
     def play(self, url: str):
         try:
@@ -72,13 +76,18 @@ class player(commands.Cog):
     def getCacheFunction(self, guild_id: int):
         data = set(map(lambda x: x[guild_id] if guild_id in x else None, self.cache))
         return list(filter(lambda x: x is not None, data))
+    
+    def removeFromCache(self, id: int):
+        for i, item in enumerate(self.cache):
+            if str(id) in item:
+                self.cache.pop(i)
 
     @discord.app_commands.command(name="play", description="Play Music")
     async def play(self, interaction: discord.Interaction, url: str):
         await interaction.response.defer(thinking=True)
         try:
             if not interaction.user.voice or not interaction.user.voice.channel:
-                await interaction.response.send_message('You need be in the voice channel.', ephemeral=True)
+                await interaction.followup.send('You need be in the voice channel.', ephemeral=True)
                 return
             
             voice_client = interaction.guild.voice_client
@@ -105,11 +114,10 @@ class player(commands.Cog):
                     title = info_dict["title"]
                 else:
                     title = info_dict["title"]
-
             if len(self.getCacheFunction(interaction.guild_id)) <= 0:                
                 self.cache.append(
                     {
-                        interaction.guild_id: MusicPlayer(url, voice_client, interaction)
+                        interaction.guild_id: MusicPlayer(url, voice_client, interaction, self.removeFromCache, interaction.guild_id)
                     }
                 )
 
@@ -159,12 +167,12 @@ class player(commands.Cog):
             if interaction.guild.voice_client:
                 if interaction.guild.voice_client.is_paused():
                     interaction.guild.voice_client.resume()
-                    await interaction.response.send_message("Music is resume :arrow_forward:")
+                    await interaction.followup.send("Music is resume :arrow_forward:")
                 else:
                     interaction.guild.voice_client.pause()
-                    await interaction.response.send_message("Music is paused :pause_button:")
+                    await interaction.followup.send("Music is paused :pause_button:")
             else:
-                await interaction.response.send_message("No music is playing.", ephemeral=True)
+                await interaction.followup.send("No music is playing.", ephemeral=True)
         except Exception as e:
             logger.error(f"Error: {e}")
             await interaction.followup.send("Sorry, i have some problem")
@@ -176,9 +184,9 @@ class player(commands.Cog):
             voice_client = interaction.guild.voice_client
             if voice_client and voice_client.is_connected():
                 await voice_client.disconnect()
-                await interaction.response.send_message("I'm Leaving.")
+                await interaction.followup.send("I'm Leaving.")
             else:
-                await interaction.response.send_message("I'm not in the voice chat", ephemeral=True)
+                await interaction.followup.send("I'm not in the voice chat", ephemeral=True)
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
             await interaction.followup.send("Sorry, i have some problem")
