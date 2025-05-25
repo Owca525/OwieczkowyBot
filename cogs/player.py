@@ -20,7 +20,7 @@ ytdl_format_options_check = {
 }
 
 FFMPEG_OPTIONS = {
-    'options': '-vn -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+    'options': '-vn -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 2000000',
 }
 
 class MusicPlayer:
