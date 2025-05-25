@@ -41,10 +41,9 @@ class MusicPlayer:
             print(error)
             return
 
-        if len(self.playlist) > 1:
-            self.playlist.pop(0)
-        
-        self.extractMusic()
+        self.playlist.pop(0)
+        if len(self.playlist) > 0:
+            self.extractMusic()
 
     def play(self, url: str):
         source = discord.FFmpegPCMAudio(url, **FFMPEG_OPTIONS)
