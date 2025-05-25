@@ -26,7 +26,7 @@ games = [
     "Left 4 Dead 2",
     "The Binding of isaac: Repentance",
     "Project Zomboid",
-    "My summer car"
+    "My summer car",
     f"My prefix {client.command_prefix}"
 ]
 
@@ -64,17 +64,18 @@ async def changePresence():
 
 @client.event
 async def on_ready():
-    await changePresence.start()
     logger.info(f"Loggin as {client.user} ({client.user.id})")
     showInfo()
     for filename in os.listdir(f'{path_location}/cogs'):
-        if filename.endswith('.py'):
+        if filename.endswith('.py') and not filename.startswith('_'):
             await client.load_extension(f'cogs.{filename[:-3]}')
     try:
         synced = await client.tree.sync()
         logger.info(f"Synced {len(synced)} commands")
     except Exception as e:
         logger.error(e)
+
+    await changePresence.start()
 
 if __name__ == "__main__":
     client.run(config[0])

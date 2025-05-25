@@ -5,6 +5,7 @@ import discord
 import asyncio
 import sys
 import os
+from main import path_location
 
 from utils import (
     log_file, logger
@@ -35,15 +36,14 @@ class devcog(commands.Cog):
         async with ctx.typing():
             embed = discord.Embed(title='# Reload All cogs #', timestamp=ctx.message.created_at, color=discord.Color.green())
 
-            for cog in os.listdir(os.path.dirname(__file__)):
-                if cog.endswith('.py') and not cog.startswith('_'):
+            for filename in os.listdir(f'{path_location}/cogs'):
+                if filename.endswith('.py') and not filename.startswith('_'):
                     try:
-                        cog_name = cog[:-3]
-                        await self.client.unload_extension(f"cogs.{cog_name}")
-                        await self.client.load_extension(f"cogs.{cog_name}")
-                        embed.add_field(name=f":white_check_mark: Loaded: {cog_name}", value="", inline=False)
+                        await self.client.unload_extension(f"cogs.{filename[:-3]}")
+                        await self.client.load_extension(f"cogs.{filename[:-3]}")
+                        embed.add_field(name=f":white_check_mark: Loaded: {filename[:-3]}", value="", inline=False)
                     except Exception as error:
-                        embed.add_field(name=f':x: Not Loaded: {cog} ', value=error, inline=False)
+                        embed.add_field(name=f':x: Not Loaded: {filename[:-3]} ', value=error, inline=False)
 
                     await asyncio.sleep(0.5)
 
