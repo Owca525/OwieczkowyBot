@@ -1,3 +1,4 @@
+import asyncio
 import discord
 from discord.ext import commands
 from yt_dlp import YoutubeDL
@@ -25,48 +26,54 @@ FFMPEG_OPTIONS = {
 }
 
 class MusicPlayer:
-    def __init__(self, url: str, voice_client, interaction: discord.Interaction, resetFunc, server_id):
+    def __init__(self, url: str, voice_client, interaction: discord.Interaction, resetFunc, server_id, client):
         self.title: str
         self.playlist = [url]
         self.voice_client: discord.VoiceClient | discord.VoiceProtocol = voice_client
         self.interaction: discord.Interaction = interaction
         self.resetFunc = resetFunc
         self.server_id = server_id
+        self.client = client
 
-    def extractMusic(self):
+    async def extractMusic(self):
         try:
             with YoutubeDL(ytdl_format_options) as ydl:
                 info = ydl.extract_info(self.playlist[0], download=False)
                 self.title = info["title"]
-                self.play(info["url"])
+                await self.play(info["url"])
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
-            self.voice_client.disconnect()
+            await self.voice_client.disconnect()
     
-    def detectError(self, error):
-        if error:
-            print(error)
-            return
-
+    async def detectError(self):
         try:
             self.playlist.pop(0)
             if len(self.playlist) > 0:
                 self.extractMusic()
                 return
             self.resetFunc(self.server_id)
-            self.voice_client.disconnect()
+            await self.voice_client.disconnect()
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
             self.resetFunc(self.server_id)
-            self.voice_client.disconnect()
-
-    def play(self, url: str):
+            await self.voice_client.disconnect()
+    
+    def wrapper(self, error):
         try:
-            source = discord.FFmpegPCMAudio(url, **FFMPEG_OPTIONS)
-            self.voice_client.play(source, after=self.detectError)
+            if error:
+                logger.error(f"Error player: {error}")
+                return
+            self.client.loop.create_task(self.detectError())
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
-            self.voice_client.disconnect()
+            
+    async def play(self, url: str):
+        try:
+            source = discord.FFmpegPCMAudio(url, **FFMPEG_OPTIONS)
+            self.voice_client.play(source, after=self.wrapper)
+        except Exception as e:
+            logger.error(f"Error: {e}", exc_info=True)
+            await self.voice_client.disconnect()
 
 class player(commands.Cog):
     def __init__(self, bot):
@@ -74,14 +81,20 @@ class player(commands.Cog):
         self.cache = [] # { ID: MusicPLayer }
 
     def getCacheFunction(self, guild_id: int):
-        data = set(map(lambda x: x[guild_id] if guild_id in x else None, self.cache))
-        return list(filter(lambda x: x is not None, data))
+        try:
+            data = set(map(lambda x: x[guild_id] if guild_id in x else None, self.cache))
+            return list(filter(lambda x: x is not None, data))
+        except Exception as e:
+            logger.error(f"Error: {e}", exc_info=True)
     
     def removeFromCache(self, id: int):
-        for i, item in enumerate(self.cache):
-            if str(id) in item:
-                self.cache.pop(i)
-        logger.info(f"Cache {id} removed")
+        try:
+            for i, item in enumerate(self.cache):
+                if int(id) in item:
+                    self.cache.pop(i)
+                    logger.info(f"Cache {id} removed")
+        except Exception as e:
+            logger.error(f"Error: {e}", exc_info=True)
 
     @discord.app_commands.command(name="play", description="Play Music")
     async def play(self, interaction: discord.Interaction, url: str):
@@ -104,7 +117,7 @@ class player(commands.Cog):
             originalURL = url
             urls = []
             title = ""
-        
+            logger.info(self.cache)
             with YoutubeDL(ytdl_format_options_check) as ydl:
                 info_dict = ydl.extract_info(url, download=False)
                 if "entries" in info_dict:
@@ -118,7 +131,7 @@ class player(commands.Cog):
             if len(self.getCacheFunction(interaction.guild_id)) <= 0:                
                 self.cache.append(
                     {
-                        interaction.guild_id: MusicPlayer(url, voice_client, interaction, self.removeFromCache, interaction.guild_id)
+                        interaction.guild_id: MusicPlayer(url, voice_client, interaction, self.removeFromCache, interaction.guild_id, self.bot)
                     }
                 )
 
@@ -128,7 +141,7 @@ class player(commands.Cog):
                     for item in urls:
                         func.playlist.append(item)
 
-                func.extractMusic()
+                await func.extractMusic()
                 if len(urls) > 0:
                     embed = discord.Embed(
                         title=f":arrow_forward: Playing Playlist: {title}",

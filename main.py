@@ -78,6 +78,6 @@ async def on_ready():
         logger.error(e)
 
     await changePresence.start()
-
+    
 if __name__ == "__main__":
     client.run(config[0])
