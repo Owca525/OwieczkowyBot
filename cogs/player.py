@@ -53,12 +53,12 @@ class MusicPlayer:
             if len(self.playlist) > 0:
                 self.extractMusic()
                 return
-            self.voice_client.disconnect()
             self.resetFunc(self.server_id)
+            self.voice_client.disconnect()
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
-            self.voice_client.disconnect()
             self.resetFunc(self.server_id)
+            self.voice_client.disconnect()
 
     def play(self, url: str):
         try:
@@ -81,6 +81,7 @@ class player(commands.Cog):
         for i, item in enumerate(self.cache):
             if str(id) in item:
                 self.cache.pop(i)
+        logger.info(f"Cache {id} removed")
 
     @discord.app_commands.command(name="play", description="Play Music")
     async def play(self, interaction: discord.Interaction, url: str):
