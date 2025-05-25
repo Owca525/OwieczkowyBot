@@ -11,7 +11,7 @@ config = check_config()
 
 path_location = os.path.dirname(__file__)
 
-intents = discord.Intents.all()
+intents = discord.Intents.default()
 client = commands.Bot(command_prefix=config[1], intents=intents)
 
 games = [
