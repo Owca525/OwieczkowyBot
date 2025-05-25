@@ -56,7 +56,7 @@ def showInfo():
 async def changeStatus():
     await client.change_presence(
         status=discord.Status.idle,
-        activity=discord.activity.Game(games[random.randint(0, len(games))-1])
+        activity=discord.activity.Game(games[random.randint(1, len(games))-1])
     )
 
 @tasks.loop(hours=1)
