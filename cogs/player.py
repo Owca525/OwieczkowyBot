@@ -15,7 +15,6 @@ ytdl_format_options = {
 }
 
 ytdl_format_options_check = {
-    'quiet': True,
     'extract_flat': True,
     'force_generic_extractor': True,
 }
@@ -49,7 +48,8 @@ class MusicPlayer:
         try:
             self.playlist.pop(0)
             if len(self.playlist) > 0:
-                self.extractMusic()
+                print("Playlist ", len(self.playlist))
+                await self.extractMusic()
                 return
             self.resetFunc(self.server_id)
             await self.voice_client.disconnect()
