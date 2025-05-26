@@ -29,11 +29,13 @@ games = [
     "Project Zomboid",
     "My summer car",
     "Minecraft",
+    "Lethal Company",
     f"My prefix {client.command_prefix}"
 ]
 
 @client.event
 async def on_command_error(ctx, error) -> None:
+    logger.error(f"Error: {error}", exc_info=True)
     if isinstance(error, commands.CommandNotFound):
         await ctx.send("Uknown Command please type help")
         return
