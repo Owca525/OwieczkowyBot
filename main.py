@@ -30,6 +30,31 @@ games = [
     "My summer car",
     "Minecraft",
     "Lethal Company",
+    "Five night at Freddy's",
+    "Euro Trucks Simulator 2",
+    "Minecraft",
+    "Team Fortress 2",
+    "Terraria",
+    "The Forest",
+    "Doki Doki Literature Club",
+    "Half Life",
+    "Half Life 2",
+    "Half Life 2: Episode One",
+    "Half Life 2: Episode Two",
+    "Half Life Source",
+    "Counter Strike",
+    "Counter-Strike: Global Offensive",
+    "Muse Dash",
+    "Danganronpa Trigger Happy Havoc",
+    "Danganronpa 2 Goodbye Despair",
+    "Danganronpa V3 Killing Harmony",
+    "Gothic 1 Classic",
+    "Gothic II: Gold Edition",
+    "Gothic 3",
+    "Spelunky",
+    "Sonic mania",
+    "Left 4 Dead",
+    "Left 4 Dead 2",
     f"My prefix {client.command_prefix}"
 ]
 
@@ -82,4 +107,6 @@ async def on_ready():
     await changePresence.start()
     
 if __name__ == "__main__":
+    if not os.path.exists(f"{path_location}/cache"):
+        os.mkdir(f"{path_location}/cache")
     client.run(config[0])
