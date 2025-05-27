@@ -34,8 +34,8 @@ class funcog(commands.Cog):
                     downloaded_filepath = os.path.join(f"{path_location}/cache", f"{id}.{ext}")
 
             if int(os.path.getsize(downloaded_filepath) / (1024 * 1024)) > 8:
-                os.remove(downloaded_filepath)
                 await interaction.followup.send(f"File is too big because his size is: {os.path.getsize(downloaded_filepath) / (1024 * 1024)}mb")
+                os.remove(downloaded_filepath)
                 return
                 
             await interaction.followup.send(file=discord.File(downloaded_filepath))
