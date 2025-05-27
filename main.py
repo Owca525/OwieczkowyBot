@@ -72,6 +72,10 @@ async def on_command_error(ctx, error) -> None:
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send("Missing argument please type help")
         return
+    
+    if isinstance(error, commands.CommandInvokeError):
+        await ctx.send("Sorry, i have some problem")
+        return
 
 def showInfo():
     logger.info("--------")
