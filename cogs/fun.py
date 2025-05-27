@@ -32,6 +32,11 @@ class funcog(commands.Cog):
                     ext = info_dict.get('ext', 'mp4')
                     id = info_dict.get('id', 'video')
                     downloaded_filepath = os.path.join(f"{path_location}/cache", f"{id}.{ext}")
+
+            if int(os.path.getsize(downloaded_filepath) / (1024 * 1024)) > 8:
+                os.remove(downloaded_filepath)
+                await interaction.followup.send("File is too big")
+                return
                 
             await interaction.followup.send(file=discord.File(downloaded_filepath))
             os.remove(downloaded_filepath)
