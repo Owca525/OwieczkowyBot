@@ -72,10 +72,12 @@ async def on_command_error(ctx, error) -> None:
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send("Missing argument please type help")
         return
-    
-    if isinstance(error, discord.app_commands.errors.CommandInvokeError):
-        await ctx.followup.send("Sorry, i have some problem")
-        return
+
+@client.tree.error
+async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+    logger.error(f"Error: {error}", exc_info=True)
+    if isinstance(error, discord.app_commands.CommandInvokeError):
+        await interaction.followup.send("Sorry, i have some problem")
 
 def showInfo():
     logger.info("--------")
