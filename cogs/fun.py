@@ -34,7 +34,7 @@ class funcog(commands.Cog):
                     downloaded_filepath = os.path.join(f"{path_location}/cache", f"{id}.{ext}")
 
             if int(os.path.getsize(downloaded_filepath) / (1024 * 1024)) > 8:
-                await interaction.followup.send(f"File is too big because his size is: {os.path.getsize(downloaded_filepath) / (1024 * 1024)}mb")
+                await interaction.followup.send(f"File is too big because his size is: {os.path.getsize(downloaded_filepath) / (1024 * 1024):.1f}mb")
                 os.remove(downloaded_filepath)
                 return
                 
