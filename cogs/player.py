@@ -24,6 +24,14 @@ FFMPEG_OPTIONS = {
     'options': '-vn -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 1000',
 }
 
+def run_YT_DLP(options, url):
+    try:
+        with YoutubeDL(options) as ydl:
+            return ydl.extract_info(url, download=False)
+    except Exception as e:
+        logger.error(e)
+        return None
+
 class MusicPlayer:
     def __init__(self, url: str, voice_client, interaction: discord.Interaction, resetFunc, server_id, client):
         self.title: str
@@ -36,10 +44,9 @@ class MusicPlayer:
 
     async def extractMusic(self):
         try:
-            with YoutubeDL(ytdl_format_options) as ydl:
-                info = ydl.extract_info(self.playlist[0], download=False)
-                self.title = info["title"]
-                await self.play(info["url"])
+            info = await asyncio.to_thread(run_YT_DLP, ytdl_format_options, self.playlist[0])
+            self.title = info["title"]
+            await self.play(info["url"])
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
             await self.voice_client.disconnect()
@@ -118,16 +125,17 @@ class player(commands.Cog):
             urls = []
             title = ""
             logger.info(self.cache)
-            with YoutubeDL(ytdl_format_options_check) as ydl:
-                info_dict = ydl.extract_info(url, download=False)
-                if "entries" in info_dict:
-                    urls.append([entry['url'] for entry in info_dict['entries']])
-                    urls = urls[0]
-                    url = urls[0]
-                    urls.pop(0)
-                    title = info_dict["title"]
-                else:
-                    title = info_dict["title"]
+
+            info_dict = await asyncio.to_thread(run_YT_DLP, ytdl_format_options_check, url)
+            if "entries" in info_dict:
+                urls.append([entry['url'] for entry in info_dict['entries']])
+                urls = urls[0]
+                url = urls[0]
+                urls.pop(0)
+                title = info_dict["title"]
+            else:
+                title = info_dict["title"]
+
             if len(self.getCacheFunction(interaction.guild_id)) <= 0:                
                 self.cache.append(
                     {
