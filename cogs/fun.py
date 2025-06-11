@@ -19,12 +19,15 @@ def downloadFromYT_DLP(url):
             
             if 'requested_downloads' in info_dict and info_dict['requested_downloads']:
                 downloaded_filepath = info_dict['requested_downloads'][0]['filepath']
+                return downloaded_filepath
             elif 'filepath' in info_dict:
                 downloaded_filepath = info_dict['filepath']
+                return downloaded_filepath
             else:
                 ext = info_dict.get('ext', 'mp4')
                 id = info_dict.get('id', 'video')
                 downloaded_filepath = os.path.join(f"{path_location}/cache", f"{id}.{ext}")
+                return downloaded_filepath
         
         return downloaded_filepath
     except Exception as e:
