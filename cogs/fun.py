@@ -45,6 +45,9 @@ class funcog(commands.Cog):
                 os.makedirs(f"{path_location}/cache")
             
             downloaded_filepath = await asyncio.to_thread(downloadFromYT_DLP, url)
+            if downloaded_filepath == None:
+                await interaction.followup.send("Sorry i have extraction error")
+                return
 
             if int(os.path.getsize(downloaded_filepath) / (1024 * 1024)) > 8:
                 await interaction.followup.send(f"File is too big because his size is: {os.path.getsize(downloaded_filepath) / (1024 * 1024):.1f}mb")
