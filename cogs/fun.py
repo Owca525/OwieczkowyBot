@@ -49,12 +49,16 @@ class funcog(commands.Cog):
                 await interaction.followup.send("Sorry i have extraction error")
                 return
 
-            if int(os.path.getsize(downloaded_filepath) / (1024 * 1024)) > 8:
-                await interaction.followup.send(f"File is too big because his size is: {os.path.getsize(downloaded_filepath) / (1024 * 1024):.1f}mb")
-                os.remove(downloaded_filepath)
-                return
+            # if int(os.path.getsize(downloaded_filepath) / (1024 * 1024)) > 8:
+            #     await interaction.followup.send(f"File is too big because his size is: {os.path.getsize(downloaded_filepath) / (1024 * 1024):.1f}mb")
+            #     os.remove(downloaded_filepath)
+            #     return
                 
             await interaction.followup.send(file=discord.File(downloaded_filepath))
+            os.remove(downloaded_filepath)
+        except discord.errors.HTTPException as e:
+            if e.status == 413:
+                await interaction.followup.send("I can't Send this because File is too big")
             os.remove(downloaded_filepath)
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
