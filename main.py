@@ -4,8 +4,10 @@ import sys
 import discord
 from discord.ext import commands, tasks
 import os
-from utils import check_config, logger
+from utils import logger
 import random
+from pathlib import Path
+from utils import check_config, logger
 
 config = check_config()
 
@@ -77,12 +79,13 @@ async def on_command_error(ctx, error) -> None:
 async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
     logger.error(f"Error: {error}", exc_info=True)
     if isinstance(error, discord.app_commands.CommandInvokeError):
-        await interaction.followup.send("Sorry, i have some problem")
+        await interaction.followup.send(f"Sorry, {error}")
 
 def showInfo():
     logger.info("--------")
     logger.info(f"Python Version: {sys.version}")
     logger.info(f"Version Discord.py: {discord.__version__}")
+    # logger.info(f"yt-dlp Version: {yt_dlp.version}")
     logger.info(f"Host System: {str(platform.system()) + ' ' +  str(platform.release())}")
     logger.info(f"Bot Prefix: {client.command_prefix}")
     logger.info("--------")
@@ -113,6 +116,5 @@ async def on_ready():
     await changePresence.start()
     
 if __name__ == "__main__":
-    if not os.path.exists(f"{path_location}/cache"):
-        os.mkdir(f"{path_location}/cache")
+    Path(f"{path_location}/cache").mkdir(parents=True, exist_ok=True)
     client.run(config[0])

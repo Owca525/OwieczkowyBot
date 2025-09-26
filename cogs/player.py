@@ -180,7 +180,7 @@ class player(commands.Cog):
                 await interaction.followup.send(embed=embed)
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
-            await interaction.followup.send("Sorry, i have some problem")
+            await interaction.followup.send(f"Sorry, {e}")
 
     @discord.app_commands.command(name="pause", description="Pause Music")
     async def pause(self, interaction: discord.Interaction):
@@ -197,7 +197,7 @@ class player(commands.Cog):
                 await interaction.followup.send("No music is playing.", ephemeral=True)
         except Exception as e:
             logger.error(f"Error: {e}")
-            await interaction.followup.send("Sorry, i have some problem")
+            await interaction.followup.send(f"Sorry, {e}")
 
     @discord.app_commands.command(name="stop", description="Stop Music")
     async def stop(self, interaction: discord.Interaction):

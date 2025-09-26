@@ -15,3 +15,6 @@ config.ini
 *.njsproj
 *.sln
 *.sw?
+docker-compose.yml
+.gitignore
+.env
