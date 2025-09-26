@@ -4,6 +4,8 @@ import sys
 import discord
 from discord.ext import commands, tasks
 import os
+
+import pkg_resources
 from utils import logger
 import random
 from pathlib import Path
@@ -85,7 +87,7 @@ def showInfo():
     logger.info("--------")
     logger.info(f"Python Version: {sys.version}")
     logger.info(f"Version Discord.py: {discord.__version__}")
-    # logger.info(f"yt-dlp Version: {yt_dlp.version}")
+    logger.info(f"yt-dlp Version: {pkg_resources.get_distribution("yt-dlp").version}")
     logger.info(f"Host System: {str(platform.system()) + ' ' +  str(platform.release())}")
     logger.info(f"Bot Prefix: {client.command_prefix}")
     logger.info("--------")

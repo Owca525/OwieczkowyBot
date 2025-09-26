@@ -1,4 +1,5 @@
 import asyncio
+import pprint
 import discord
 from discord.ext import commands
 from yt_dlp import YoutubeDL
@@ -127,6 +128,11 @@ class player(commands.Cog):
             logger.info(self.cache)
 
             info_dict = await asyncio.to_thread(run_YT_DLP, ytdl_format_options_check, url)
+            
+            if info_dict == None:
+                await interaction.followup.send("Failed Take video")
+                return
+
             if "entries" in info_dict:
                 urls.append([entry['url'] for entry in info_dict['entries']])
                 urls = urls[0]
