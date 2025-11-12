@@ -1,5 +1,4 @@
 import asyncio
-import pprint
 import discord
 from discord.ext import commands
 from yt_dlp import YoutubeDL
@@ -131,6 +130,10 @@ class player(commands.Cog):
             
             if info_dict == None:
                 await interaction.followup.send("Failed Take video")
+                return
+            
+            if ("E8gmARGvPlI" == info_dict["id"]):
+                await interaction.followup.send("NIE")
                 return
 
             if "entries" in info_dict:
