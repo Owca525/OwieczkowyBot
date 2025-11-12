@@ -88,10 +88,11 @@ class funcog(commands.Cog):
             with open(save_path, "wb") as f:
                 f.write(await file.read())
 
-            file_dir = f"{save_dir}/{file_name[:file_name.rfind(".")]}.gif"
+            file_dir = f"{save_dir}/{file_name[:file_name.rfind(".")]}.gif"  
             command = [
                 "ffmpeg",
                 "-i", f"{save_dir}/{file_name}",
+                "-filter_complex", '"[0:v] split [a][b]; [a] palettegen [p]; [b][p] paletteuse"',
                 file_dir
             ]
             process = await asyncio.create_subprocess_exec(*command)
