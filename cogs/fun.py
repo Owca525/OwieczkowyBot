@@ -1,5 +1,6 @@
 import asyncio
 import os
+from pprint import pprint
 import discord
 from discord.ext import commands
 import yt_dlp
@@ -16,30 +17,29 @@ def generateLongString(length=24):
 
 def downloadFromYT_DLP(url):
     try:
+        filename = generateLongString()
+        byteMaxSize = 8000000
         ydl_opts = {
-            'format': 'worstvideo+worstaudio/best',
             'quiet': True,
-            'merge_output_format': 'mp4',
-            'outtmpl': os.path.join(f"{path_location}/cache", '%(id)s.%(ext)s'),
+            "max_filesize": byteMaxSize,
+            "format": "worstvideo[height>=240][height<=720]+worstaudio/best[height>=240][height<=720]/best",
+            'outtmpl': os.path.join(f"{path_location}/cache", f'{filename}.%(ext)s'),
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
-            
-            if 'requested_downloads' in info_dict and info_dict['requested_downloads']:
-                downloaded_filepath = info_dict['requested_downloads'][0]['filepath']
-                return { "path": downloaded_filepath, "error": False, "message": "" }
-            elif 'filepath' in info_dict:
-                downloaded_filepath = info_dict['filepath']
-                return { "path": downloaded_filepath, "error": False, "message": "" }
-            else:
-                ext = info_dict.get('ext', 'mp4')
-                id = info_dict.get('id', 'video')
-                downloaded_filepath = os.path.join(f"{path_location}/cache", f"{id}.{ext}")
-                return downloaded_filepath
+            ext = info_dict.get('ext', 'mp4')
         
-        return { "path": downloaded_filepath, "error": False, "message": "" }
+        if info_dict["requested_downloads"][0]["filesize_approx"] > byteMaxSize:
+            for item in info_dict['requested_downloads'][0]["requested_formats"]:
+                if os.path.exists(item["filepath"]): os.remove(item["filepath"])
+            return { "path": "", "error": True, "message": "I can't Send this because File is too big" }
+        
+        if os.path.exists(os.path.join(f"{path_location}/cache", f'{filename}.{ext}')): return { "path": os.path.join(f"{path_location}/cache", f'{filename}.{ext}'), "error": False, "message": "" }
+        for item in info_dict['requested_downloads'][0]["requested_formats"]:
+            if os.path.exists(os.path.join(item["filepath"])): return { "path": os.path.join(item["filepath"]), "error": False, "message": "" }
+        return { "path": "", "error": True, "message": "Failed to download file" }
     except Exception as e:
-        logger.error(e)
+        logger.error("Error in downloadFromYT_DLP", e, exc_info=True)
         return { "path": "", "error": True, "message": str(e) }
 
 class funcog(commands.Cog):
@@ -49,10 +49,7 @@ class funcog(commands.Cog):
     @discord.app_commands.command(name="extractvideo", description="Send Video from url")
     async def extractvideo(self, interaction: discord.Interaction, url: str):
         await interaction.response.defer(thinking=True)
-        try:
-            os.makedirs(f"{path_location}/cache/yt", exist_ok=True)
-            Path(f"{path_location}/cache/yt").mkdir(parents=True, exist_ok=True)
-            
+        try:            
             data = await asyncio.to_thread(downloadFromYT_DLP, url)
             if data["error"]:
                 message = data['message'].split(":", 2)[-1].strip()
@@ -66,7 +63,7 @@ class funcog(commands.Cog):
                 await interaction.followup.send("I can't Send this because File is too big")
             os.remove(data["path"])
         except Exception as e:
-            logger.error(f"Error: {e}", exc_info=True)
+            logger.error(f"Error in extractvideo: {e}", exc_info=True)
             if data["path"]:
                 os.remove(data["path"])
             await interaction.followup.send(e)
@@ -76,8 +73,7 @@ class funcog(commands.Cog):
         await interaction.response.defer(thinking=True)
 
         try:
-            save_dir = f"{path_location}/cache/convert"
-            Path(save_dir).mkdir(parents=True, exist_ok=True)
+            save_dir = f"{path_location}/cache"
 
             if int(file.size / (1024 * 1024)) > 8:
                 await interaction.followup.send(f"File is too big because his size is: {file.size / (1024 * 1024):.1f}mb")
