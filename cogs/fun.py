@@ -71,6 +71,8 @@ class funcog(commands.Cog):
             if int(file.size / (1024 * 1024)) > 8:
                 await interaction.followup.send(f"File is too big because his size is: {file.size / (1024 * 1024):.1f}mb")
                 return
+            
+            os.makedirs(save_dir, exist_ok=True)
 
             fileName = f"{fileFolderName}{file.filename[file.filename.rfind("."):]}"
             save_path = os.path.join(save_dir, fileName)
@@ -80,7 +82,7 @@ class funcog(commands.Cog):
             file_dir = f"{save_dir}/{fileName[:fileName.rfind(".")]}.gif"  
             command = [
                 "ffmpeg",
-                "-i", os.path.join(save_path, fileName),
+                "-i", save_path,
                 "-filter_complex", '[0:v] split [a][b]; [a] palettegen [p]; [b][p] paletteuse',
                 file_dir
             ]
