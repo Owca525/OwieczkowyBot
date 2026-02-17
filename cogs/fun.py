@@ -17,7 +17,7 @@ def generateLongString(length=24):
 def downloadFromYT_DLP(url):
     filename = generateLongString()
     try:
-        byteMaxSize = 8000000
+        byteMaxSize = 8388608
         os.mkdir(f"{path_location}/cache/{filename}")
         ydl_opts = {
             'quiet': True,
@@ -48,7 +48,11 @@ class funcog(commands.Cog):
                 message = data['message'].split(":", 2)[-1].strip()
                 await interaction.followup.send(f"Sorry, {message}")
                 return
-                
+            
+            if os.path.exists(data["file"]) == False:
+                await interaction.followup.send(f"Sorry, Failed Download Video")
+                return
+
             await interaction.followup.send(file=discord.File(data["file"]))
             if os.path.exists(data["path"]): shutil.rmtree(data["path"])
         except discord.errors.HTTPException as e:
