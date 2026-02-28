@@ -1,23 +1,27 @@
 
+import asyncio
 import platform
 import sys
 import discord
 from discord.ext import commands, tasks
 import os
 
-import pkg_resources
 from utils import logger
 import random
 from pathlib import Path
-from utils import check_config, logger
+from utils import logger
+from utils import YTDLPWrapper
 
-config = check_config()
+TOKEN = os.getenv("BOT_TOKEN")
+PREFIX = os.getenv("BOT_PREFIX")
+
+print(TOKEN)
 
 path_location = os.path.dirname(__file__)
 
 intents = discord.Intents.default()
 intents.message_content = True
-client = commands.Bot(command_prefix=config[1], intents=intents)
+client = commands.Bot(command_prefix=PREFIX, intents=intents)
 
 games = [
     "Team Fotress 2",
@@ -87,7 +91,7 @@ def showInfo():
     logger.info("--------")
     logger.info(f"Python Version: {sys.version}")
     logger.info(f"Version Discord.py: {discord.__version__}")
-    logger.info(f"yt-dlp Version: {pkg_resources.get_distribution("yt-dlp").version}")
+    logger.info(f"yt-dlp Version: Uknown")
     logger.info(f"Host System: {str(platform.system()) + ' ' +  str(platform.release())}")
     logger.info(f"Bot Prefix: {client.command_prefix}")
     logger.info("--------")
@@ -101,6 +105,11 @@ async def changeStatus():
 @tasks.loop(hours=1)
 async def changePresence():
     await changeStatus()
+
+@tasks.loop(hours=24)
+async def changePresence():
+    logger.info("Checking yt-dlp version")
+    await YTDLPWrapper().checkUpdate()
 
 @client.event
 async def on_ready():
@@ -116,7 +125,9 @@ async def on_ready():
         logger.error(e)
 
     await changePresence.start()
-    
+
+
 if __name__ == "__main__":
+    asyncio.run(YTDLPWrapper().checkUpdate())
     Path(f"{path_location}/cache").mkdir(parents=True, exist_ok=True)
-    client.run(config[0])
+    client.run(TOKEN)

@@ -1,14 +1,15 @@
 import asyncio
+import json
 import os
 import discord
 from discord.ext import commands
-import yt_dlp
 from utils import logger
 import secrets
 import string
 import shutil
 
 from main import path_location
+from utils.yt_dlpWrapper import YTDLPWrapper
 
 def generateLongString(length=24):
     chars = string.ascii_letters + string.digits
@@ -17,19 +18,24 @@ def generateLongString(length=24):
 def downloadFromYT_DLP(url):
     filename = generateLongString()
     try:
-        byteMaxSize = 8388608
+        byteMaxSize = 10485760
         os.mkdir(f"{path_location}/cache/{filename}")
-        ydl_opts = {
-            'quiet': True,
-            "max_filesize": byteMaxSize,
-            "format": "worstvideo[height>=240][height<=720]+worstaudio/best[height>=240][height<=720]/best",
-            'outtmpl': os.path.join(f"{path_location}/cache/{filename}", f'{filename}.%(ext)s'),
-        }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(url, download=True)
-            ext = info_dict.get('ext', 'mp4')
+        path = os.path.join(f"{path_location}/cache/{filename}", f'{filename}.mp4')
+        YTDLPWrapper().Download([
+            "--quiet",
+            "--max-filesize",
+            f"{byteMaxSize}",
+            "--format",
+            "worstvideo[height>=240][height<=720]+worstaudio/best[height>=240][height<=720]/best",
+            "-o",
+            f"{path}",
+            url
+        ])
+        if os.path.exists(os.path.join(f"{path_location}/cache/{filename}", f'{filename}.mp4')) == False:
+            shutil.rmtree(f"{path_location}/cache/{filename}")
+            return { "file": "", "path": "", "error": True, "message": "Failed Download Video" }
 
-        return { "file": os.path.join(f"{path_location}/cache/{filename}", f'{filename}.{ext}'), "path": f"{path_location}/cache/{filename}", "error": False, "message": "" }
+        return { "file": os.path.join(f"{path_location}/cache/{filename}", f'{filename}.mp4'), "path": f"{path_location}/cache/{filename}", "error": False, "message": "" }
     except Exception as e:
         logger.error("Error in downloadFromYT_DLP", e, exc_info=True)
         shutil.rmtree(f"{path_location}/cache/{filename}")
@@ -44,6 +50,7 @@ class funcog(commands.Cog):
         await interaction.response.defer(thinking=True)
         try:            
             data = await asyncio.to_thread(downloadFromYT_DLP, url)
+            print(data)
             if data["error"]:
                 message = data['message'].split(":", 2)[-1].strip()
                 await interaction.followup.send(f"Sorry, {message}")

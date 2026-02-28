@@ -10,6 +10,7 @@ from main import path_location
 from utils import (
     log_file, logger
 )
+from utils.yt_dlpWrapper import YTDLPWrapper
 
 startTime = datetime.now()
 
@@ -23,6 +24,15 @@ class devcog(commands.Cog):
         try:
             file = discord.File(f"{log_file}", filename=str(log_file))
             await ctx.send(f"Log Name File: {os.path.basename(log_file)}", file=file)
+        except Exception as e:
+            await ctx.send(f'Error: {e}')
+
+    @commands.command()
+    @commands.is_owner()
+    async def checkveryt_dlp(self,ctx) -> None:
+        try:
+            logger.info("Checking yt-dlp version")
+            await YTDLPWrapper().checkUpdate()
         except Exception as e:
             await ctx.send(f'Error: {e}')
 

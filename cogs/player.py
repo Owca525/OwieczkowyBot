@@ -1,9 +1,10 @@
 import asyncio
 import discord
 from discord.ext import commands
-from yt_dlp import YoutubeDL
 from utils import logger
-import re
+import json
+
+from utils import YTDLPWrapper
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
@@ -24,29 +25,57 @@ FFMPEG_OPTIONS = {
     'options': '-vn -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 1000',
 }
 
-def run_YT_DLP(options, url):
-    try:
-        with YoutubeDL(options) as ydl:
-            return ydl.extract_info(url, download=False)
-    except Exception as e:
-        logger.error(e)
-        return None
-
 class MusicPlayer:
     def __init__(self, url: str, voice_client, interaction: discord.Interaction, resetFunc, server_id, client):
-        self.title: str
-        self.playlist = [url]
+        self.originalUrl: str = url
+        self.playlist = [] # { url: string, title: string }[]
+        self.playlistMetadata = None # { url: string, title: string }
         self.voice_client: discord.VoiceClient | discord.VoiceProtocol = voice_client
         self.interaction: discord.Interaction = interaction
         self.resetFunc = resetFunc
         self.server_id = server_id
         self.client = client
 
-    async def extractMusic(self):
+    async def startLoop(self):
+        tmp = YTDLPWrapper().run(["--flat-playlist" ,"-j", self.originalUrl])
+
+        if tmp == "Error" or tmp == "": return self.resetFunc(self.server_id)
+
+        if isinstance(tmp, str):
+            tmp = json.loads(tmp)
+            self.playlist.append({ "url": tmp["original_url"], "title": tmp["title"] })
+        elif isinstance(tmp, list):
+            self.playlist = list(map(lambda x: { "url": json.loads(x)["original_url"], "title": json.loads(x)["title"] }, tmp))
+
+        if len(self.playlist) > 1:
+            asdads = json.loads(tmp[-1])
+            self.playlistMetadata = {
+                "url": asdads["playlist_webpage_url"],
+                "title": asdads["playlist_title"]
+            }
+
+        if self.playlistMetadata:
+            embed = discord.Embed(
+                title=f":arrow_forward: Playing Playlist: {self.playlistMetadata["title"]}",
+                description=self.playlistMetadata["url"],
+                color=discord.Color.green()
+            )
+            await self.interaction.followup.send(embed=embed)
+
+        await self.extractMusic(self.playlist[0]["url"], self.playlist[0]["title"])
+
+    async def extractMusic(self, url: str, title: str):
         try:
-            info = await asyncio.to_thread(run_YT_DLP, ytdl_format_options, self.playlist[0])
-            self.title = info["title"]
-            await self.play(info["url"])
+            info = await asyncio.to_thread(YTDLPWrapper().run, ["-f", "bestaudio/best", "-g", url])
+            print(info)
+            if info == "" or info == "Error":
+                embed = discord.Embed(
+                    title=f":x: Failed Load: {title}",
+                    description=url,
+                    color=discord.Color.red()
+                )
+                return await self.interaction.followup.send(embed=embed)
+            await self.play(info, title, url)
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
             await self.voice_client.disconnect()
@@ -55,10 +84,14 @@ class MusicPlayer:
         try:
             self.playlist.pop(0)
             if len(self.playlist) > 0:
-                print("Playlist ", len(self.playlist))
-                await self.extractMusic()
+                await self.extractMusic(self.playlist[0]["url"], self.playlist[0]["title"])
                 return
             self.resetFunc(self.server_id)
+            embed = discord.Embed(
+                title=f"Ending Playlist",
+                color=discord.Color.green()
+            )
+            await self.interaction.followup.send(embed)
             await self.voice_client.disconnect()
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
@@ -74,13 +107,47 @@ class MusicPlayer:
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
             
-    async def play(self, url: str):
+    async def play(self, rawLink: str, title: str, url: str):
         try:
-            source = discord.FFmpegPCMAudio(url, **FFMPEG_OPTIONS)
+            embed = discord.Embed(
+                title=f":arrow_forward: Playing Music: {title}",
+                description=url,
+                color=discord.Color.green()
+            )
+            source = discord.FFmpegPCMAudio(rawLink, **FFMPEG_OPTIONS)
+            await self.interaction.followup.send(embed=embed)
             self.voice_client.play(source, after=self.wrapper)
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
             await self.voice_client.disconnect()
+    
+    async def AddContent(self, url, interaction: discord.Interaction):
+        tmp = await asyncio.to_thread(YTDLPWrapper().run, ["--flat-playlist" ,"-j", url])
+
+        if tmp == "Error" or tmp == "":
+            embed = discord.Embed(
+                title=f":x: Failed Adding New Content",
+                description=url,
+                color=discord.Color.green()
+            )
+            await interaction.followup.send(embed=embed)
+            return
+        
+        titles = ""
+
+        if isinstance(tmp, str):
+            self.playlist.append({ "url": tmp["url"], "title": tmp["title"] })
+            titles = f":white_check_mark: Succesfully Adding: {tmp["title"]}"
+        elif isinstance(tmp, list):
+            self.playlist = self.playlist + list(map(lambda x: { "url": json.loads(x)["url"], "title": json.loads(x)["title"] }, tmp))
+            titles = f":white_check_mark: Succesfully Adding Playlist: {json.loads(tmp)[0]["playlist_title"]}"
+
+        embed = discord.Embed(
+            title=titles,
+            description=url,
+            color=discord.Color.green()
+        )
+        await interaction.followup.send(embed=embed)
 
 class player(commands.Cog):
     def __init__(self, bot):
@@ -118,75 +185,18 @@ class player(commands.Cog):
             elif voice_client.channel != channel:
                 await voice_client.move_to(channel)
             
-            if "list=" in url:
-                url = f'https://www.youtube.com/playlist?list={re.findall(r"[?&]list=([^&]+)", url)[0]}'
-            
-            originalURL = url
-            urls = []
-            title = ""
-            logger.info(self.cache)
-
-            info_dict = await asyncio.to_thread(run_YT_DLP, ytdl_format_options_check, url)
-            
-            if info_dict == None:
-                await interaction.followup.send("Failed Take video")
-                return
-            
-            if ("E8gmARGvPlI" == info_dict["id"]):
-                await interaction.followup.send("NIE")
-                return
-
-            if "entries" in info_dict:
-                urls.append([entry['url'] for entry in info_dict['entries']])
-                urls = urls[0]
-                url = urls[0]
-                urls.pop(0)
-                title = info_dict["title"]
+            if len(self.getCacheFunction(interaction.guild_id)) == 1:
+                func = self.getCacheFunction(interaction.guild_id)[0]
+                await func.AddContent(url, interaction)
             else:
-                title = info_dict["title"]
-
-            if len(self.getCacheFunction(interaction.guild_id)) <= 0:                
+                tmp = MusicPlayer(url, voice_client, interaction, self.removeFromCache, interaction.guild_id, self.bot)
+                await tmp.startLoop()
                 self.cache.append(
                     {
-                        interaction.guild_id: MusicPlayer(url, voice_client, interaction, self.removeFromCache, interaction.guild_id, self.bot)
+                        interaction.guild_id: tmp
                     }
                 )
 
-                func = self.getCacheFunction(interaction.guild_id)[0]
-                
-                if len(urls) > 0:
-                    for item in urls:
-                        func.playlist.append(item)
-
-                await func.extractMusic()
-                if len(urls) > 0:
-                    embed = discord.Embed(
-                        title=f":arrow_forward: Playing Playlist: {title}",
-                        description=originalURL,
-                        color=discord.Color.green()
-                    )
-                else:
-                    embed = discord.Embed(
-                        title=f":arrow_forward: Playing Music: {title}",
-                        description=url,
-                        color=discord.Color.green()
-                    )
-                await interaction.followup.send(embed=embed)
-            else:
-                func = self.getCacheFunction(interaction.guild_id)[0]
-
-                if len(urls) > 0:
-                    for item in urls:
-                        func.playlist.append(item)
-                else:
-                    func.playlist.append(url)
-
-                embed = discord.Embed(
-                    title=f":white_check_mark: Succesfully Adding: {title}",
-                    description=originalURL,
-                    color=discord.Color.green()
-                )
-                await interaction.followup.send(embed=embed)
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
             await interaction.followup.send(f"Sorry, {e}")

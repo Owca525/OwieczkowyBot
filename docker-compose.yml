@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  discord-bot:
+    build: .
+    container_name: owieczkowy-bot
+    restart: unless-stopped
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - BOT_PREFIX=${BOT_PREFIX}
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: python main.py
