@@ -11,11 +11,10 @@ import random
 from pathlib import Path
 from utils import logger
 from utils import YTDLPWrapper
+from utils.functions import readFromFile
 
 TOKEN = os.getenv("BOT_TOKEN")
 PREFIX = os.getenv("BOT_PREFIX")
-
-print(TOKEN)
 
 path_location = os.path.dirname(__file__)
 
@@ -91,7 +90,7 @@ def showInfo():
     logger.info("--------")
     logger.info(f"Python Version: {sys.version}")
     logger.info(f"Version Discord.py: {discord.__version__}")
-    logger.info(f"yt-dlp Version: Uknown")
+    logger.info(f"yt-dlp Version: {readFromFile(f"{path_location}/ytver.txt")}")
     logger.info(f"Host System: {str(platform.system()) + ' ' +  str(platform.release())}")
     logger.info(f"Bot Prefix: {client.command_prefix}")
     logger.info("--------")
@@ -107,7 +106,7 @@ async def changePresence():
     await changeStatus()
 
 @tasks.loop(hours=24)
-async def changePresence():
+async def checkUpdateYt_dlp():
     logger.info("Checking yt-dlp version")
     await YTDLPWrapper().checkUpdate()
 

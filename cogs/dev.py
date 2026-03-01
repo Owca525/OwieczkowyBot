@@ -5,6 +5,8 @@ import discord
 import asyncio
 import sys
 import os
+import subprocess
+
 from main import path_location
 
 from utils import (
@@ -33,6 +35,27 @@ class devcog(commands.Cog):
         try:
             logger.info("Checking yt-dlp version")
             await YTDLPWrapper().checkUpdate()
+        except Exception as e:
+            await ctx.send(f'Error: {e}')
+
+    @commands.command()
+    @commands.is_owner()
+    async def checkUpdate(self, ctx) -> None:
+        try:
+            logger.info("Checking Repo And Updating")
+
+            results = subprocess.Popen([
+                "git",
+                "clone",
+                "https://github.com/Owca525/OwieczkowyBot.git",
+                path_location
+            ])
+
+            if results.returncode != 0:
+                return await ctx.send("Failed Fetch Repo")
+            await ctx.send("Succesfully Checked and Updated")
+            exit(2137)
+            
         except Exception as e:
             await ctx.send(f'Error: {e}')
 

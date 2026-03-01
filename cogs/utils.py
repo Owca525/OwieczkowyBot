@@ -32,20 +32,6 @@ class utilscog(commands.Cog):
             logger.error(f"Error: {e}", exc_info=True)
             await interaction.followup.send("Sorry, i have some problem")
 
-    # TODO: Someday fixing this
-    # @discord.app_commands.command(name="banner", description="Show user banner")
-    # async def banner(self, interaction: discord.Interaction, user: discord.User):
-    #     await interaction.response.defer(thinking=True)
-    #     if user.banner == None:
-    #         await interaction.followup.send(f"{user.name} Dosen't have banner")
-    #         return
-    #     embed = discord.Embed(
-    #         title=f"{user.name} Banner",
-    #         color=discord.Color.green()
-    #     )
-    #     embed.set_image(url=user.banner.url)
-    #     await interaction.followup.send(embed=embed)
-
 async def setup(client) -> None:
     await client.add_cog(utilscog(client))
     logger.info("Utils Cog online")

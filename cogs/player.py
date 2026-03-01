@@ -6,20 +6,6 @@ import json
 
 from utils import YTDLPWrapper
 
-ytdl_format_options = {
-    'format': 'bestaudio/best',
-    'postprocessors': [{
-        'key': 'FFmpegExtractAudio',
-        'preferredquality': '192',
-    }],
-    'extract_flat': False,
-}
-
-ytdl_format_options_check = {
-    'extract_flat': True,
-    'force_generic_extractor': True,
-}
-
 FFMPEG_OPTIONS = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 1000',
     'options': '-vn -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 1000',

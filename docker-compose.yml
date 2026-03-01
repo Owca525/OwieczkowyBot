@@ -6,7 +6,7 @@ services:
     container_name: owieczkowy-bot
     restart: unless-stopped
     environment:
-      - BOT_TOKEN=${BOT_TOKEN}
+      - BOT_TOKEN=${DISCORD_TOKEN}
       - BOT_PREFIX=${BOT_PREFIX}
     volumes:
       - .:/app

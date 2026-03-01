@@ -45,12 +45,37 @@ class funcog(commands.Cog):
     def __init__(self, client):
         self.client = client
 
+    @commands.command()
+    async def extractvideo(self, ctx, url) -> None:
+        try:
+            data = await asyncio.to_thread(downloadFromYT_DLP, url)
+
+            if data["error"]:
+                message = data['message'].split(":", 2)[-1].strip()
+                await ctx.send(f"Sorry, {message}")
+                return
+            
+            if os.path.exists(data["file"]) == False:
+                await ctx.send(f"Sorry, Failed Download Video")
+                return
+
+            await ctx.send(file=discord.File(data["file"]))
+            if os.path.exists(data["path"]): shutil.rmtree(data["path"])
+        except discord.errors.HTTPException as e:
+            if e.status == 413:
+                await ctx.send("I can't Send this because File is too big")
+            if os.path.exists(data["path"]): shutil.rmtree(data["path"])
+        except Exception as e:
+            logger.error(f"Error in extractvideo: {e}", exc_info=True)
+            if os.path.exists(data["path"]): shutil.rmtree(data["path"])
+            await ctx.send(e)
+
     @discord.app_commands.command(name="extractvideo", description="Send Video from url")
-    async def extractvideo(self, interaction: discord.Interaction, url: str):
+    async def ExtractVideo(self, interaction: discord.Interaction, url: str):
         await interaction.response.defer(thinking=True)
         try:            
             data = await asyncio.to_thread(downloadFromYT_DLP, url)
-            print(data)
+
             if data["error"]:
                 message = data['message'].split(":", 2)[-1].strip()
                 await interaction.followup.send(f"Sorry, {message}")
