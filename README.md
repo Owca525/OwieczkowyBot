@@ -1,17 +1,16 @@
 # Owieczkowy Bot
-This is simple bot for music, Made for fun and expierienc.
+This is simple bot for music and other, Made for fun and expierienc.
 # How to run
-Clone the procject
+First is required nodejs and npm then
+Clone the project
 ```bash
 git clone https://github.com/Owca525/OwieczkowyBot
 ```
-Make config.ini and put token <br>
-```ini
-[BOT]
-token = TOKEN
-prefix = >
-```
-Run the bot
+install library
 ```bash
-python3 main.py
+npm i
+```
+Run Bot 
+```bash
+npm run dev
 ```

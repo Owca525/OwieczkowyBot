@@ -1,14 +1,16 @@
 version: "3.9"
 
 services:
-  discord-bot:
-    build: .
+  app:
+    image: node:22-alpine
+    working_dir: /app
     container_name: owieczkowy-bot
-    restart: unless-stopped
     environment:
       - BOT_TOKEN=${DISCORD_TOKEN}
       - BOT_PREFIX=${BOT_PREFIX}
+      - BOT_YT_DLP=${BOT_YT_DLP}
+      - BOT_ID=${BOT_ID}
     volumes:
       - .:/app
-    working_dir: /app
-    command: python main.py
+      - /app/node_modules
+    command: npm run dev
