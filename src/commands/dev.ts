@@ -124,9 +124,11 @@ async function updateBot(message: OmitPartialGroupDMChannel<Message<boolean>>) {
     try {
         const tmp = await checkUpdates()
         logger.info(tmp)
-        response.edit("Succesfully updated")
+        await response.edit("Succesfully updated")
+        process.kill(255)
     } catch (error) {
-        response.edit("Failed Update")
+        logger.error("Failed Update", error)
+        await response.edit(`Failed Update: ${error}`)
     }
 }
 
