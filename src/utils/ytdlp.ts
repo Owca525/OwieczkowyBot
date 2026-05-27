@@ -12,7 +12,7 @@ export const header = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0',
 }
 
-export async function checkYT_DLPUpdate() {
+export async function checkYT_DLPUpdate(force: boolean = false) {
     logger.info("Checking Update yt-dlp")
     const config = readConfig()
 
@@ -22,7 +22,7 @@ export async function checkYT_DLPUpdate() {
         return
     }
 
-    if (response["json"]["tag_name"] == config["yt_dlpVer"]) return
+    if (response["json"]["tag_name"] == config["yt_dlpVer"] && force == false) return
 
     const ytdlp = response["json"]["assets"].find((v: any) => v["name"] == "yt-dlp")
     if (!ytdlp) return logger.warn("Bot Didn't Find version of yt-dlp")

@@ -112,7 +112,7 @@ async function initialBot() {
   if (config["TOKEN"] == "PLEASE_INSERT_TOKEN_HERE") throw new Error("Invalid Token please add correct token")
   if (config["BOT_ID"] == "0") throw new Error("Invalid Bot ID please add correct Bot ID")
 
-  await checkYT_DLPUpdate()
+  await checkYT_DLPUpdate(true)
 
   ServiceManager.InitialServiceManager([
     {
