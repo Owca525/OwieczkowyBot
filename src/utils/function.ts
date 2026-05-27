@@ -158,24 +158,28 @@ export function checkUpdates() {
     const config = readConfig()
 
     return new Promise(async (resolve, reject) => {
-        const yt = spawn("git", ["fetch", "&&", "git", "pull"]);;
+        const git = spawn("git", ["fetch"]);;
 
         let data = "";
         let error = "";
 
-        yt.stdout.on("data", chunk => {
+        git.stdout.on("data", chunk => {
             data += chunk.toString();
         });
 
-        yt.stderr.on("data", chunk => {
+        git.stderr.on("data", chunk => {
             error += chunk.toString();
         });
 
-        yt.on("close", code => {
+        git.on("close", code => {
+            const git = spawn("git", ["fetch"]);
+            git.on("close", code => {
+                if (code !== 0) resolve("")
+                else reject(error)
+            })
+
             if (code !== 0) {
                 reject(error);
-            } else {
-                resolve(data)
             }
         });
     });
