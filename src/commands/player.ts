@@ -127,8 +127,6 @@ class MusicPlayer {
             this.sendMessage(":arrows_counterclockwise: Fetching Metadata")
             const response: any = await runYT_DLP(["-j", "--flat-playlist", url])
 
-            console.log(response)
-
             if (typeof response == "string") {
                 response.split("\n").forEach((v) => {
                     try {
@@ -191,13 +189,13 @@ class MusicPlayer {
             if (this.playlist.length > 0) return
 
             await this.sendMessage(":no_entry_sign: Failed Fetch Video")
-            this.connection.disconnect()
+            this.selfDestruct()
             return
         } catch (error) {
             this.fetchingMetadata = false
             logger.error("Failed Run URL ", url, error)
             await this.sendMessage(":no_entry_sign: Failed Fetch Video")
-            this.connection.disconnect()
+            this.selfDestruct()
         }
     }
 
@@ -250,7 +248,7 @@ class MusicPlayer {
         ]);
 
         this.ffmpegProcess.on("close", (err) => {
-            console.log("FFMPEG CLOSED EXIT", err)
+            logger.info("FFMPEG CLOSED EXIT", err)
 
             if (err != 0) return
 
@@ -275,7 +273,7 @@ class MusicPlayer {
             await this.message?.editReply(":no_entry_sign: Sorry I Can't Skip")
             return
         }
-        console.log(num)
+
         this.playlist = this.playlist.slice(num - 1)
         const current = this.playlist[0]
 
@@ -322,10 +320,7 @@ class StreamManagment {
 
         const instance = this.musicPlayerInstances.find((v) => v["channelID"] == member.voice.channel!.id)
 
-        if (!instance) {
-            await message.editReply(":microphone2: Sorry, I'm not in Voice chat");
-            return { instance: undefined, member: member }
-        }
+        if (instance == undefined) return { instance: undefined, member: member }
 
         return { instance: instance, member: member }
     }
@@ -346,17 +341,14 @@ class StreamManagment {
 
         instance.instance.message = message
         instance.instance.AddNewEntries(url)
-
     }
 
     disconnect = async (message: ChatInputCommandInteraction<CacheType>) => {
-        await message.deferReply()
-
         const instance = await this.getInstance(message, "Sorry, I can't Leave")
         if (!instance || !instance.instance) return
 
         instance.instance.selfDestruct()
-        await message.editReply("Okay, I'm Leaving")
+        await message.editReply(":cancer: Okay, I'm Leaving")
         this.musicPlayerInstances = this.musicPlayerInstances.filter((v) => v["channelID"] != instance.member.voice.channel!.id)
     }
 

@@ -61,7 +61,7 @@ client.once("clientReady", async () => {
   }
 });
 
-client.on("messageCreate", message => {
+client.on("messageCreate", async (message) => {
   if (message.author.bot || !message.content.startsWith(PREFIX)) return;
 
   const content = message.content.slice(1)
@@ -71,7 +71,17 @@ client.on("messageCreate", message => {
   if (!command) return
   if (command.owner && ownerID != message.author.id) return message.reply("You Don't Have Permisions")
 
-  command.execute(message)
+  try {
+    await command.execute(message)
+  } catch (error) {
+    logger.error("Failed Execute command", command["name"], error)
+
+    if (ownerID == message.author.id) {
+      await message.reply(`Command Give error ${error}`)
+    } else {
+      await message.reply(`Sorry but command result unexpected error`)
+    }
+  }
 });
 
 client.on("interactionCreate", async (interaction) => {
@@ -82,7 +92,18 @@ client.on("interactionCreate", async (interaction) => {
   if (!command) return logger.warn(`Command ${interaction.commandName} Dosen't Exist but user try to use it`)
   if (command.owner && ownerID != interaction.user!.id) return interaction.reply("You Don't Have Permisions")
   
-  command.execute(interaction)
+  try {
+    await command.execute(interaction)
+  } catch (error) {
+    logger.error("Failed Execute SlashCommand", command["name"], error)
+    const deffered = interaction.deferred
+
+    if (ownerID == interaction.user!.id) {
+      await interaction[deffered ? "editReply" : "reply"](`Slash Command Give error ${error}`)
+    } else {
+      await interaction[deffered ? "editReply" : "reply"](`Sorry but Slash Command result unexpected error`)
+    }
+  }
 });
 
 async function initialBot() {
