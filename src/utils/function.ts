@@ -174,8 +174,8 @@ export function checkUpdates() {
         git.on("close", code => {
             const git = spawn("git", ["fetch"]);
             git.on("close", code => {
-                if (code !== 0) resolve("")
-                else reject(error)
+                if (code !== 0) reject(error)
+                else resolve("")
             })
 
             if (code !== 0) {
