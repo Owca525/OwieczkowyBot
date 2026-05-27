@@ -158,7 +158,7 @@ export function checkUpdates() {
     const config = readConfig()
 
     return new Promise(async (resolve, reject) => {
-        const yt = spawn("git", ["clone", config["repo"]]);;
+        const yt = spawn("git", ["fetch", "&&", "git", "clone"]);;
 
         let data = "";
         let error = "";
