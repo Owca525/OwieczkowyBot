@@ -2,8 +2,8 @@ import { AttachmentBuilder, EmbedBuilder, Message, OmitPartialGroupDMChannel } f
 import { cogFormat } from "../utils/types";
 import { botRunDate, client, SetStatus } from "..";
 import os from "os";
-import { CensoreString, checkUpdates, formatTime } from "../utils/function";
-import { readConfig } from "../utils/config";
+import { CensoreString, checkUpdates, formatTime, updateObject } from "../utils/function";
+import { readConfig, saveConfig } from "../utils/config";
 import path from "path";
 import logger from "../utils/logger";
 import fs from "fs"
@@ -125,11 +125,65 @@ async function updateBot(message: OmitPartialGroupDMChannel<Message<boolean>>) {
         const tmp = await checkUpdates()
         logger.info(tmp)
         await response.edit("Succesfully updated")
-        process.kill(255)
+        process.exit(255)
     } catch (error) {
         logger.error("Failed Update", error)
         await response.edit(`Failed Update: ${error}`)
     }
+}
+
+async function manageService(message: OmitPartialGroupDMChannel<Message<boolean>>) {
+    const [_, ...args] = message.content.split(" ");
+
+    if (args.length < 2) return await message.reply("Missing Arguments")
+    const serviceType = args[0]
+    const serviceName = args[1]
+
+    switch (serviceType) {
+        case "Disable":
+            if (ServiceManager.StopService(serviceName)) return await message.reply(`Succesfully Stopped Service ${serviceName}`)
+            return await message.reply(`Failed Stopped Service`)
+        case "Enable":
+            if (ServiceManager.ActiveService(serviceName)) return await message.reply(`Succesfully Start Service ${serviceName}`)
+            return await message.reply(`Failed Start Service`)
+    }
+
+    await message.reply("Failed First Arguments")
+}
+
+async function changeConfig(message: OmitPartialGroupDMChannel<Message<boolean>>) {
+    const [_, ...args] = message.content.split(" ");
+
+    if (args.length < 2) return await message.reply("Missing Arguments")
+
+    const variableName = args[0]
+    const variable = args[1]
+    
+    const config = readConfig()
+
+    if (!(variableName in config)) return await message.reply("This Variable Dosen't Exist in Config")
+
+    const entries = Object.entries(config)
+
+    for (let index = 0; index < entries.length; index++) {
+        const [key, v] = entries[index];
+
+        if (key != variableName) continue
+        
+        if (typeof v == "string") {
+            saveConfig(updateObject(key, variableName, config))
+            return await message.reply(`:white_check_mark: Succesfully Updated \`${key}\` to \`${variableName}\` `)
+        }
+
+        if (Array.isArray(v)) {
+            saveConfig(updateObject(key, [...v, variableName], config))
+            return await message.reply(`:white_check_mark: Succesfully Added \`${variableName}\` to \`${key}\` `)
+        }
+
+        if (typeof v == "object") return await message.reply(`I Can't Update Object \`${key}\``)
+    }
+
+    await message.reply("I Didn't Updated Config Idk why")
 }
 
 export default {
@@ -172,7 +226,19 @@ export default {
         name: "updateBot",
         execute: updateBot,
         owner: true,
-        description: "Update Bot "
+        description: "Update Bot"
+    },
+    {
+        name: "manageService",
+        execute: manageService,
+        owner: true,
+        description: "Disable Or Enable Service"
+    },
+    {
+        name: "changeConfig",
+        execute: changeConfig,
+        owner: true,
+        description: "Change Variable in Config"
     }],
     slashCommands: []
 } as cogFormat

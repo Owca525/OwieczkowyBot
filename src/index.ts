@@ -120,7 +120,8 @@ async function initialBot() {
       execute: checkYT_DLPUpdate,
       name: "yt-dlp",
       activeMin: 180,
-      description: "Check yt-dlp is updated"
+      description: "Check yt-dlp is updated",
+      noFirstStart: true
     },
     {
       active: false,

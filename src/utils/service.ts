@@ -15,7 +15,8 @@ export interface DefaultService {
     execute: () => any | Promise<any>
     description?: string,
     name: string,
-    activeMin: number
+    activeMin: number,
+    noFirstStart?: boolean
 }
 
 class ServiceManagerInstance {
@@ -40,9 +41,11 @@ class ServiceManagerInstance {
             } catch (error) { logger.error(`Failed Execute ${service["name"]}`, error) }
         }, service["activeMin"] * 60 * 1000)
 
-        try {
-            service["execute"]()
-        } catch (error) { logger.error(`Failed Execute ${service["name"]}`, error) }
+        if (!service.noFirstStart) {
+            try {
+                service["execute"]()
+            } catch (error) { logger.error(`Failed Execute ${service["name"]}`, error) }
+        }
 
         this.services.push({
             active: service["active"],
@@ -59,7 +62,9 @@ class ServiceManagerInstance {
         let service = this.services.find((v) => v["name"] == name)
         if (!service) service = this.services.find((v) => v["id"] == name)
 
-        if (!service) return
+        if (!service) return false
+
+        if (!service.active) return true
 
         if (service["timer"]) clearInterval(service["timer"])
 
@@ -68,13 +73,17 @@ class ServiceManagerInstance {
             time: undefined,
             active: false
         } : s)
+
+        return true
     }
 
     ActiveService = (name: string) => {
         let service = this.services.find((v) => v["name"] == name)
         if (!service) service = this.services.find((v) => v["id"] == name)
 
-        if (!service) return
+        if (!service) return false
+
+        if (service.active) return true
 
         const timer = setInterval(() => {
             try {
@@ -91,6 +100,8 @@ class ServiceManagerInstance {
             time: timer,
             active: true
         } : s)
+
+        return true
     }
 }
 
