@@ -23,3 +23,7 @@ ytver.txt
 config.json
 node_modules
 yarn.lock
+
+dist
+
+pnpm-lock.yaml

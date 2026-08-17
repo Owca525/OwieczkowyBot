@@ -4,23 +4,24 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "ts-node src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "dev": "NODE_ENV=development ts-node src/index.ts",
+    "build": "node build.mjs",
+    "start": "npm run build && node dist/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@discordjs/opus": "^0.10.0",
     "@discordjs/voice": "^0.19.2",
     "discord.js": "^14.25.1",
-    "node-opus": "^0.3.3",
     "opusscript": "^0.1.1"
   },
   "devDependencies": {
-    "@types/node": "^25.9.1",
+    "@types/node": "^26.2.0",
+    "esbuild": "^0.28.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   }
 }

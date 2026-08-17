@@ -4,6 +4,7 @@ import { cogFormat } from "./types";
 import { mainPath } from "..";
 import { spawn } from "child_process";
 import { readConfig } from "./config";
+import commands from "../commands";
 
 export function deepMerge(target: { [key: string]: any }, source: { [key: string]: any }): { [key: string]: any } {
     for (const key in source) {
@@ -28,6 +29,8 @@ export function formatTime(ms: number) {
 }
 
 export function LoadCogs(): cogFormat[] {
+    if (process.env["NODE_ENV"] != "development") return commands
+
     let cogs: cogFormat[] = []  
 
     const folderPath = path.join(mainPath, "commands");
