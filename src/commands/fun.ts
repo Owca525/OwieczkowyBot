@@ -109,24 +109,24 @@ async function convertGif(message: ChatInputCommandInteraction<CacheType>) {
 
     const commands = [
         "-i", path.join(uuidFolder, file.name),
-        "-filter_complex", '[0:v] split [a][b]; [a] palettegen [p]; [b][p] paletteuse',
-        path.join(uuidFolder, `${folderTMP}.gif`)
+        "-vf", "fps=15,scale=640:-1:flags=lanczos", "-loop", "1", "-c:v", "libwebp", "-quality", "80", "-compression_level", "6",
+        path.join(uuidFolder, `${folderTMP}.webp`)
     ]
 
     try {
         await runFFMPEG(commands)
-        const buffer = fs.readFileSync(path.join(uuidFolder, `${folderTMP}.gif`))
+        const buffer = fs.readFileSync(path.join(uuidFolder, `${folderTMP}.webp`))
 
         await message.editReply({
             files: [
                 new AttachmentBuilder(Buffer.from(buffer), {
-                    name: `${folderTMP}.gif`
+                    name: `${folderTMP}.webp`
                 })
             ]
         })
     } catch (error) {
-        logger.error("Error convertGif", error)
-        await message.editReply("Failed Convert File To Gif")
+        logger.error("Error convertwebp", error)
+        await message.editReply("Failed Convert File To webp")
         fs.rmSync(uuidFolder, { recursive: true, force: true })
     }
 }
