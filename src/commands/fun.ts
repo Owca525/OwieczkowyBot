@@ -18,7 +18,7 @@ async function downloadVideo(url: string) {
             "--max-filesize",
             `${byteMaxSize}`,
             "--format",
-            "worstvideo[height>=360][height<=720]+worstaudio/best[height>=360][height<=720]/best",
+            "worstvideo[height>=360][height<=720]+worstaudio[format_note*=original]/worstvideo[height>=360][height<=720]+worstaudio/worst[height>=360][height<=720]/worst",
             "-o",
             `${path.join(BotTMPFolder, `${fileID}.mp4`)}`,
             url
@@ -135,6 +135,11 @@ export default {
     name: "Fun",
     commands: [{
         name: "extractvideo",
+        execute: extractVideo,
+        description: "Send Video from url"
+    },
+    {
+        name: "ev",
         execute: extractVideo,
         description: "Send Video from url"
     }],
