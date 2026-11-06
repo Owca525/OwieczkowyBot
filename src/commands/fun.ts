@@ -108,7 +108,7 @@ async function convertGif(message: ChatInputCommandInteraction<CacheType>) {
     fs.writeFileSync(path.join(uuidFolder, file.name), Buffer.from(bufferFile["buffer"]))
 
     const commands = [
-        "-i", path.join(uuidFolder, file.name), "-t", "120",
+        "-i", path.join(uuidFolder, file.name),
         "-filter_complex", '[0:v] split [a][b]; [a] palettegen [p]; [b][p] paletteuse',
         path.join(uuidFolder, `${folderTMP}.gif`)
     ]
@@ -127,6 +127,46 @@ async function convertGif(message: ChatInputCommandInteraction<CacheType>) {
     } catch (error) {
         logger.error("Error convert gif", error)
         await message.editReply("Failed Convert File To gif")
+        fs.rmSync(uuidFolder, { recursive: true, force: true })
+    }
+}
+
+async function convertWebp(message: ChatInputCommandInteraction<CacheType>) {
+    await message.deferReply()
+    const file = message.options.getAttachment("file");
+    if (!file) return await message.editReply("No File Detected")
+
+    if (file.size > 5242880) return await message.editReply("Sorry, File Is Too Big Limit for 5MB")
+    const bufferFile = await SheepRequest(file.url, { headers: header })
+
+    if (!bufferFile["success"]) return await message.editReply("Sorry, I can't Download This File")
+
+    const folderTMP = crypto.randomUUID()
+    const uuidFolder = path.join(BotTMPFolder, folderTMP)
+    fs.mkdirSync(path.join(BotTMPFolder, folderTMP))
+
+    fs.writeFileSync(path.join(uuidFolder, file.name), Buffer.from(bufferFile["buffer"]))
+
+    const commands = [
+        "-i", path.join(uuidFolder, file.name), "-t", "120",
+        "-vcodec", "libwebp", "-lossless", "0", "-q:v", "75", "-loop", "0", "-an", "-vsync", "0",
+        path.join(uuidFolder, `${folderTMP}.webp`)
+    ]
+
+    try {
+        await runFFMPEG(commands)
+        const buffer = fs.readFileSync(path.join(uuidFolder, `${folderTMP}.webp`))
+
+        await message.editReply({
+            files: [
+                new AttachmentBuilder(Buffer.from(buffer), {
+                    name: `${folderTMP}.webp`
+                })
+            ]
+        })
+    } catch (error) {
+        logger.error("Error convert Webp", error)
+        await message.editReply("Failed Convert File To Webp")
         fs.rmSync(uuidFolder, { recursive: true, force: true })
     }
 }
@@ -153,5 +193,10 @@ export default {
         execute: convertGif,
         description: "This convert png, mp4 etc to gif",
         options: [{ name: "file", required: true, description: "Convert File To Gif", type: 11 }]
+    },{
+        name: "towebp",
+        execute: convertWebp,
+        description: "This convert png, mp4 etc to webp",
+        options: [{ name: "file", required: true, description: "Convert File To Webp", type: 11 }]
     }]
 } as cogFormat
